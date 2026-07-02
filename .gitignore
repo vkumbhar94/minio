@@ -1,0 +1,15 @@
+# Kubernetes
+*.log
+temp/
+tmp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+.env.local
