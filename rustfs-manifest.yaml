@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: rustfs
+  name: rustfs
+spec:
+  ports:
+    - port: 9006
+      name: api
+      targetPort: 9000
+    - port: 9007
+      name: console
+      targetPort: 9001
+  selector:
+    app: rustfs
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rustfs
+spec:
+  serviceName: rustfs
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rustfs
+  template:
+    metadata:
+      labels:
+        app: rustfs
+    spec:
+      containers:
+        - args:
+            - server
+            - /data
+            - --console-address
+            - :9001
+          image: rustfs/rustfs:latest
+          imagePullPolicy: IfNotPresent
+          name: rustfs
+          env:
+            - name: RUSTFS_ROOT_USER
+              value: rustfs
+            - name: RUSTFS_ROOT_PASSWORD
+              value: rustfs_key
+          volumeMounts:
+            - name: datadir
+              mountPath: /data
+          resources:
+            requests:
+              memory: "256M"
+          ports:
+            - containerPort: 9000
+              name: api
+            - containerPort: 9001
+              name: console
+      restartPolicy: Always
+  volumeClaimTemplates:
+    - metadata:
+        name: datadir
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 2Gi
